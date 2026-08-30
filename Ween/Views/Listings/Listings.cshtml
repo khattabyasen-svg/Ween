@@ -1,0 +1,89 @@
+@model Ween.Models.ListingsPageViewModel
+@{
+    ViewData["Title"] = $"{Model.CategoryName} in {Model.CityName}";
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">@Model.CategoryName · @Model.CityName</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">Cities</a>
+            <span class="sep">/</span>
+            <a asp-controller="Categories" asp-action="Index" asp-route-city="@Model.CitySlug">@Model.CityName</a>
+            <span class="sep">/</span>
+            <span class="current">@Model.CategoryName</span>
+        </nav>
+    </header>
+</div>
+
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <section class="hero" style="padding-bottom:10px;">
+        <div class="hero-eyebrow">@Model.CategoryIcon @Model.CategoryName</div>
+        <h1>@Model.CategoryName in <em>@Model.CityName</em></h1>
+        <p>
+            @Model.Places.Count place@(Model.Places.Count == 1 ? "" : "s") found —
+            tap a card to see hours, contact info, photos, and reserve.
+        </p>
+        <form class="search-bar" onsubmit="return false;" style="margin-top:6px;">
+            <input type="text" id="listingSearch" placeholder="Search by name or area, e.g. Rainbow Street…" oninput="filterListings()">
+            <button type="button" onclick="filterListings()">Search</button>
+        </form>
+        <a class="back-link" asp-controller="Categories" asp-action="Index" asp-route-city="@Model.CitySlug">← back to categories</a>
+    </section>
+
+    <div class="section-label"><span class="num">03</span><h2>Tap a card for details</h2></div>
+
+    <div class="listing-grid" id="listingGrid">
+        @foreach (var p in Model.Places)
+        {
+            var photo = p.CoverPhotoUrl;
+            var area = p.Address.Split(',')[0];
+            <a class="listing-card"
+               data-search="@($"{p.Name} {p.Address} {p.Tag}".ToLower())"
+               asp-controller="Places" asp-action="Details" asp-route-id="@p.PlaceId">
+                <div class="listing-photo @(photo != null ? "has-photo" : "")"
+                     style="@(photo != null ? $"background-image:url('{photo}')" : $"background:{Model.CityTint}")">
+                    @(photo == null ? p.CategoryIcon : "")
+                    @if (!string.IsNullOrEmpty(p.Tag))
+                    {
+                        <span class="tag">@p.Tag</span>
+                    }
+                </div>
+                <div class="listing-body">
+                    <h3>@p.Name</h3>
+                    <div class="listing-meta">
+                        <span>@area</span>
+                        <span class="rating">★ @p.Rating</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
+
+    @if (Model.Places.Count == 0)
+    {
+        <p class="empty-note">No @Model.CategoryName.ToLower() listed in @Model.CityName yet.</p>
+    }
+</div>
+
+<hr class="mosaic-rule">
+<div class="wrap">
+    <footer class="site-footer">
+        <span>ween — @Model.CategoryName in @Model.CityName</span>
+        <a asp-controller="Home" asp-action="Index">All cities</a>
+    </footer>
+</div>
+
+@section Scripts {
+    <script>
+        function filterListings() {
+          const q = document.getElementById('listingSearch').value.trim().toLowerCase();
+          document.querySelectorAll('#listingGrid .listing-card').forEach(card => {
+            const hay = card.getAttribute('data-search') || '';
+            card.style.display = hay.includes(q) ? '' : 'none';
+          });
+        }
+    </script>
+}

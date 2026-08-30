@@ -1,0 +1,75 @@
+@model Ween.Models.MyAccountViewModel
+@{
+    ViewData["Title"] = "My Account";
+    var initial = string.IsNullOrEmpty(Model.FullName) ? "?" : Model.FullName.Trim()[..1].ToUpper();
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">My Account</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">Directory</a>
+            <span class="sep">/</span>
+            <span class="current">My Account</span>
+        </nav>
+    </header>
+</div>
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <div class="account-grid" style="margin-top:20px;">
+        <div class="account-card">
+            <div class="account-avatar">@initial</div>
+            <h3>@Model.FullName</h3>
+            <div class="acc-email">@Model.Email</div>
+            <div class="account-fact"><span>Phone</span><span>@(string.IsNullOrEmpty(Model.PhoneNumber) ? "—" : Model.PhoneNumber)</span></div>
+            <div class="account-fact"><span>Role</span><span>@Model.Role</span></div>
+            <div class="account-fact"><span>Member since</span><span>@Model.MemberSince.ToString("MMM yyyy")</span></div>
+            <div class="account-fact"><span>Confirmed</span><span>@Model.ConfirmedCount booking(s)</span></div>
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="logout-btn">Log out</button>
+            </form>
+        </div>
+
+        <div>
+            <div class="section-label"><span class="num">01</span><h2>My reservations</h2></div>
+            <div class="res-list" style="margin-bottom:60px;">
+                @if (Model.Reservations.Count == 0)
+                {
+                    <p class="empty-note">You have no reservations yet. <a class="map-link" asp-controller="Home" asp-action="Index">Browse cities</a> to book a table, room, or seat.</p>
+                }
+                else
+                {
+                    @foreach (var r in Model.Reservations)
+                    {
+                        var isCancelled = r.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+                        <div class="res-row">
+                            <div class="res-icon" style="background:@r.CityTint">@r.CategoryIcon</div>
+                            <div class="res-main">
+                                <h4>@r.PlaceName</h4>
+                                <div class="res-sub2">
+                                    @r.ReservationDate.ToString("yyyy-MM-dd") at @r.ReservationTime.ToString("HH:mm")
+                                    · @r.PartySize guest(s)@(r.Nights.HasValue ? $", {r.Nights} night(s)" : "")
+                                    · @r.CityName
+                                </div>
+                            </div>
+                            <span class="status-badge status-@r.Status.ToLower()">@r.Status</span>
+                            <form asp-controller="Account" asp-action="CancelReservation" method="post" style="display:inline;">
+                                <input type="hidden" name="id" value="@r.ReservationId" />
+                                <button type="submit" class="cancel-btn" disabled="@isCancelled">@(isCancelled ? "Cancelled" : "Cancel")</button>
+                            </form>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="mosaic-rule">
+<div class="wrap">
+    <footer class="site-footer">
+        <span>ween — a directory of Jordan</span>
+        <a asp-controller="Home" asp-action="Index">All cities</a>
+    </footer>
+</div>

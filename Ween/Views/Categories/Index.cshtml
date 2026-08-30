@@ -1,0 +1,42 @@
+@model Ween.Models.CategoriesPageViewModel
+@{
+    ViewData["Title"] = Model.CityName;
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">Find your place in Jordan</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">All cities</a>
+            <span class="sep">/</span>
+            <span class="current">@Model.CityName</span>
+        </nav>
+    </header>
+</div>
+
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <div class="section-label"><span class="num">02</span><h2>Choose a category in @Model.CityName</h2></div>
+    <div class="category-grid">
+        @foreach (var c in Model.Categories)
+        {
+            <a class="category-card"
+               asp-controller="Listings" asp-action="Index"
+               asp-route-city="@Model.CitySlug" asp-route-category="@c.Slug">
+                <span class="corner"></span>
+                <span class="icon">@c.Icon</span>
+                <h3>@c.Name</h3>
+                <div class="count">@c.PlaceCount places</div>
+            </a>
+        }
+    </div>
+</div>
+
+<hr class="mosaic-rule">
+<div class="wrap">
+    <footer class="site-footer">
+        <span>ween — @Model.CityName</span>
+        <span>@Model.Categories.Count categories</span>
+    </footer>
+</div>

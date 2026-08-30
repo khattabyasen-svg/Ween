@@ -1,0 +1,41 @@
+# ---- Build output (every project) ----
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+
+# ---- Visual Studio / Rider local settings ----
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# ---- .NET / MSBuild ----
+project.lock.json
+*.nuget.props
+*.nuget.targets
+artifacts/
+
+# ---- Secrets / environment-specific config ----
+# Base appsettings.json IS committed (localhost, Windows auth, no credentials).
+# Environment overrides are ignored in case they hold real connection strings/secrets.
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+
+# ---- Logs ----
+logs/
+*.log
+
+# ---- Test project (intentionally not published to this repo) ----
+Ween.Tests/
+
+# ---- OS cruft ----
+Thumbs.db
+.DS_Store

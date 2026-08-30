@@ -1,0 +1,176 @@
+@model Ween.Models.PlaceDetailsViewModel
+@{
+    ViewData["Title"] = Model.Place.Name;
+    var p = Model.Place;
+    var photos = p.Photos.OrderBy(x => x.DisplayOrder).Select(x => x.PhotoUrl).ToList();
+    var listingsUrl = Url.Action("Index", "Listings", new { city = p.CitySlug, category = p.CategorySlug });
+    var detailsUrl = Url.Action("Details", "Places", new { id = p.PlaceId });
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+    // Only treat the location link as clickable if it's an http/https URL — blocks stored javascript: URIs.
+    var safeMapUrl = !string.IsNullOrEmpty(p.LocationUrl)
+        && Uri.TryCreate(p.LocationUrl, UriKind.Absolute, out var mapUri)
+        && (mapUri.Scheme == Uri.UriSchemeHttp || mapUri.Scheme == Uri.UriSchemeHttps)
+        ? p.LocationUrl
+        : null;
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">@p.Name</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">Cities</a><span class="sep">/</span>
+            <a asp-controller="Categories" asp-action="Index" asp-route-city="@p.CitySlug">@p.CityName</a><span class="sep">/</span>
+            <a asp-controller="Listings" asp-action="Index" asp-route-city="@p.CitySlug" asp-route-category="@p.CategorySlug">@p.CategoryName</a><span class="sep">/</span>
+            <span class="current">@p.Name</span>
+        </nav>
+    </header>
+</div>
+
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <a class="back-link" href="@listingsUrl" style="margin-top:20px; display:inline-flex;">← back to listings</a>
+
+    <section style="margin-top: 18px;">
+        <div id="detailsHeroWrap">
+            @if (photos.Count == 0)
+            {
+                <div class="details-hero" style="background:@Model.CityTint">@p.CategoryIcon</div>
+            }
+            else
+            {
+                <div class="gallery-main"><img id="galleryMainImg" src="@photos[0]" alt="@p.Name"></div>
+                @if (photos.Count > 1)
+                {
+                    <div class="gallery-thumbs" id="galleryThumbs">
+                        @for (var i = 0; i < photos.Count; i++)
+                        {
+                            <div class="gallery-thumb @(i == 0 ? "active" : "")" data-src="@photos[i]" onclick="setGalleryImage(this)">
+                                <img src="@photos[i]" alt="Photo @(i + 1)">
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="details-layout">
+            <div>
+                <div class="details-title">
+                    <span class="cat-tag">@p.CategoryIcon @p.CategoryName · @p.CityName</span>
+                    <h1>@p.Name</h1>
+                </div>
+                <p class="details-desc">@p.Description</p>
+                <div class="details-facts">
+                    <div class="fact-row"><span class="fact-label">Address</span><span>@p.Address</span></div>
+                    <div class="fact-row">
+                        <span class="fact-label">Location</span>
+                        <span>
+                            @if (safeMapUrl != null)
+                            {
+                                <a href="@safeMapUrl" target="_blank" rel="noopener" class="map-link">View on map ↗</a>
+                            }
+                            else
+                            {
+                                <span style="color:var(--ink-soft)">Not provided</span>
+                            }
+                        </span>
+                    </div>
+                    <div class="fact-row"><span class="fact-label">Hours</span><span>@p.Hours</span></div>
+                    <div class="fact-row"><span class="fact-label">Phone</span><span>@p.Phone</span></div>
+                    <div class="fact-row"><span class="fact-label">Rating</span><span class="rating">★ @p.Rating / 5</span></div>
+                    <div class="fact-row"><span class="fact-label">Tag</span><span>@p.Tag</span></div>
+                    <div class="fact-row"><span class="fact-label">Capacity</span><span>@p.Capacity guests / day</span></div>
+                </div>
+            </div>
+
+            <aside class="res-panel">
+                <h3>@Model.ReservationVerb</h3>
+                <div class="res-sub">at @p.Name</div>
+
+                @if (TempData["ResConfirm"] != null)
+                {
+                    <div class="res-confirm show">@TempData["ResConfirm"]</div>
+                }
+                @if (TempData["ResError"] != null)
+                {
+                    <div class="auth-error show">@TempData["ResError"]</div>
+                }
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <form asp-controller="Places" asp-action="Reserve" method="post">
+                        <input type="hidden" name="PlaceId" value="@p.PlaceId" />
+                        <div class="field">
+                            <label for="ReservationDate">Date</label>
+                            <input type="date" id="ReservationDate" name="ReservationDate" required
+                                   min="@today" data-place="@p.PlaceId" oninput="updateCapacity()">
+                        </div>
+                        <div id="capacityHint" class="res-sub" style="margin-top:-8px;margin-bottom:14px;"></div>
+                        <div class="field">
+                            <label for="ReservationTime">Time</label>
+                            <input type="time" id="ReservationTime" name="ReservationTime" required>
+                        </div>
+                        <div class="field">
+                            <label for="PartySize">@Model.ReservationPartyLabel</label>
+                            <select id="PartySize" name="PartySize">
+                                @for (var n = 1; n <= 6; n++)
+                                {
+                                    <option value="@n" selected="@(n == 2)">@n</option>
+                                }
+                            </select>
+                        </div>
+                        @if (Model.ShowRoom)
+                        {
+                            <div class="field">
+                                <label for="Nights">Nights</label>
+                                <select id="Nights" name="Nights">
+                                    <option>1</option><option selected>2</option><option>3</option><option>5</option><option>7</option>
+                                </select>
+                            </div>
+                        }
+                        <button type="submit" class="res-submit">@Model.ReservationVerb</button>
+                    </form>
+                }
+                else
+                {
+                    <p class="details-desc" style="margin-top:0;">Log in to @Model.ReservationVerb.ToLower() at @p.Name.</p>
+                    <a class="res-submit" style="display:block;text-align:center;text-decoration:none;"
+                       asp-controller="Account" asp-action="Login" asp-route-returnUrl="@detailsUrl">Log in</a>
+                    <div class="auth-switch">New here?
+                        <a asp-controller="Account" asp-action="Register" asp-route-returnUrl="@detailsUrl">Create an account</a>
+                    </div>
+                }
+            </aside>
+        </div>
+    </section>
+</div>
+
+<hr class="mosaic-rule" style="margin-top:60px;">
+<div class="wrap">
+    <footer class="site-footer">
+        <span>ween — @p.Name</span>
+        <a asp-controller="Home" asp-action="Index">All cities</a>
+    </footer>
+</div>
+
+@section Scripts {
+    <script>
+        function setGalleryImage(el) {
+            document.getElementById('galleryMainImg').src = el.getAttribute('data-src');
+            document.querySelectorAll('#galleryThumbs .gallery-thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function updateCapacity() {
+            const input = document.getElementById('ReservationDate');
+            const hint = document.getElementById('capacityHint');
+            if (!input || !input.value) { if (hint) hint.textContent = ''; return; }
+            const placeId = input.getAttribute('data-place');
+            fetch(`/Places/DayUsage?placeId=${placeId}&date=${input.value}`)
+                .then(r => r.json())
+                .then(d => { hint.textContent = `${d.booked} of ${d.capacity} spots booked for ${input.value} (${d.remaining} left).`; })
+                .catch(() => { hint.textContent = ''; });
+        }
+    </script>
+}

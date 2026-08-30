@@ -1,0 +1,56 @@
+@model IEnumerable<Ween.Models.CityCardViewModel>
+@{
+    ViewData["Title"] = "Find places across Jordan";
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">Find your place in Jordan</span></div>
+        <nav class="crumbs"><span class="current">All cities</span></nav>
+    </header>
+</div>
+
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <section class="hero">
+        <div class="hero-eyebrow">A directory of Jordan, city by city</div>
+        <h1>Every <em>café</em>, table, and <em>room</em> — mapped by city.</h1>
+        <p>Pick a city to browse coffee shops, restaurants, hotels, and transport — then reserve a table or a room right from the listing.</p>
+        <form class="search-bar" onsubmit="return false;">
+            <input type="text" placeholder="Search a city, e.g. Amman, Aqaba…" id="citySearch" oninput="filterCities()">
+            <button type="submit">Search</button>
+        </form>
+    </section>
+
+    <div class="section-label"><span class="num">01</span><h2>Choose a city</h2></div>
+    <div class="city-grid" id="cityGrid">
+        @foreach (var c in Model)
+        {
+            <a class="city-card" data-name="@c.Name.ToLower()"
+               asp-controller="Categories" asp-action="Index" asp-route-city="@c.Slug"
+               style="--tint:@c.Tint">
+                <span class="city-count">@c.Count places</span>
+                <div>
+                    <div class="city-name">@c.Name</div>
+                    <div class="city-ar">@c.LocalName</div>
+                </div>
+            </a>
+        }
+    </div>
+</div>
+
+<hr class="mosaic-rule">
+<div class="wrap"><footer class="site-footer"><span>ween — a directory of Jordan</span><span>@Model.Count() cities</span></footer></div>
+
+@section Scripts {
+    <script>
+        function filterCities() {
+          const q = document.getElementById('citySearch').value.trim().toLowerCase();
+          document.querySelectorAll('#cityGrid .city-card').forEach(card => {
+            const name = card.getAttribute('data-name') || '';
+            card.style.display = name.includes(q) ? '' : 'none';
+          });
+        }
+    </script>
+}

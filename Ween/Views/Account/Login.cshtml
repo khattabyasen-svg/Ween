@@ -1,0 +1,45 @@
+@model Ween.Models.LoginViewModel
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">Log in</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">Directory</a>
+            <span class="sep">/</span>
+            <span class="current">Log in</span>
+        </nav>
+    </header>
+</div>
+<div class="mosaic-band"></div>
+
+<div class="auth-shell">
+    <div class="auth-card">
+        <div class="hero-eyebrow">Welcome back</div>
+        <h1>Log in</h1>
+        <div class="auth-sub">Manage your reservations and account details.</div>
+
+        <div asp-validation-summary="All" class="auth-error @(ViewData.ModelState.IsValid ? "" : "show")"></div>
+
+        <form asp-controller="Account" asp-action="Login" method="post">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <div class="field">
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" type="email" placeholder="you@example.com">
+            </div>
+            <div class="field">
+                <label asp-for="Password">Password</label>
+                <input asp-for="Password" type="password" placeholder="••••••••">
+            </div>
+            <button type="submit" class="res-submit">Log in</button>
+        </form>
+
+        <div class="auth-switch">New to ween? <a asp-controller="Account" asp-action="Register">Create an account</a></div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

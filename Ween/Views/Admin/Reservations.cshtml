@@ -1,0 +1,77 @@
+@model Ween.Models.AdminReservationsViewModel
+@{
+    ViewData["Title"] = "All reservations";
+}
+
+<div class="wrap">
+    <header class="site-header">
+        <div class="brand"><span class="brand-mark">Ween</span><span class="brand-name">All reservations</span></div>
+        <nav class="crumbs">
+            <a asp-controller="Home" asp-action="Index">Directory</a><span class="sep">/</span>
+            <a asp-controller="Admin" asp-action="Index">Admin</a><span class="sep">/</span>
+            <span class="current">Reservations</span>
+        </nav>
+    </header>
+</div>
+<div class="mosaic-band"></div>
+
+<div class="wrap">
+    <section class="hero" style="padding-bottom:6px;">
+        <div class="hero-eyebrow">Admin</div>
+        <h1>Every <em>reservation</em>, across every user</h1>
+        <p>Every booking made through the directory — tables, rooms, and seats — in one place. Cancel any of them from here.</p>
+        <a class="back-link" asp-controller="Admin" asp-action="Index">← back to admin</a>
+    </section>
+
+    <div class="res-stats">
+        <span><strong>@Model.Total</strong> total</span>
+        <span><strong>@Model.Confirmed</strong> confirmed</span>
+        <span><strong>@Model.Cancelled</strong> cancelled</span>
+    </div>
+
+    <div class="filter-tabs">
+        <a class="filter-tab @(Model.Filter == "all" ? "active" : "")" asp-action="Reservations" asp-route-filter="all">All</a>
+        <a class="filter-tab @(Model.Filter == "confirmed" ? "active" : "")" asp-action="Reservations" asp-route-filter="confirmed">Confirmed</a>
+        <a class="filter-tab @(Model.Filter == "cancelled" ? "active" : "")" asp-action="Reservations" asp-route-filter="cancelled">Cancelled</a>
+    </div>
+
+    <div class="res-list" style="margin-bottom:60px;">
+        @if (Model.Rows.Count == 0)
+        {
+            <p class="empty-note">No @(Model.Filter == "all" ? "" : Model.Filter + " ")reservations yet.</p>
+        }
+        else
+        {
+            @foreach (var r in Model.Rows)
+            {
+                var isCancelled = r.Status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase);
+                <div class="res-row">
+                    <div class="res-icon" style="background:@r.CityTint">@r.CategoryIcon</div>
+                    <div class="res-main">
+                        <h4>@r.PlaceName</h4>
+                        <div class="res-sub2">
+                            @r.ReservationDate.ToString("yyyy-MM-dd") at @r.ReservationTime.ToString("HH:mm")
+                            · @r.PartySize guest(s)@(r.Nights.HasValue ? $", {r.Nights} night(s)" : "")
+                            · @r.CityName
+                        </div>
+                    </div>
+                    <span class="res-customer">@r.CustomerName</span>
+                    <span class="status-badge status-@r.Status.ToLower()">@r.Status</span>
+                    <form asp-controller="Admin" asp-action="CancelReservation" method="post" style="display:inline;">
+                        <input type="hidden" name="id" value="@r.ReservationId" />
+                        <input type="hidden" name="filter" value="@Model.Filter" />
+                        <button type="submit" class="cancel-btn" disabled="@isCancelled">@(isCancelled ? "Cancelled" : "Cancel")</button>
+                    </form>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+<hr class="mosaic-rule">
+<div class="wrap">
+    <footer class="site-footer">
+        <span>ween — a directory of Jordan</span>
+        <a asp-controller="Admin" asp-action="Index">Admin</a>
+    </footer>
+</div>
